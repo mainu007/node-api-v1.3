@@ -1,6 +1,7 @@
 const formidable = require("formidable");
 const Post = require("../models/post");
 const fs = require("fs");
+const _ = require("lodash");
 
 exports.postById = (req, res, next, id) => {
    Post.findById(id)
@@ -71,6 +72,18 @@ exports.isPoster = (req, res, next) => {
       return res.status(403).json({ error: "User not authorized" });
    }
    next();
+};
+//updated post method
+exports.updatePost = (req, res) => {
+   let post = req.post;
+   post = _.extend(post, req.body);
+   post.updated = Date.now();
+   post.save((err) => {
+      if (err) {
+         res.status(403).json({ error: err });
+      }
+      res.json({ message: "Post updated successfully", post });
+   });
 };
 //delete post method
 exports.deletePost = (req, res) => {
