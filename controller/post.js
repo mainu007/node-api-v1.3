@@ -2,6 +2,18 @@ const formidable = require("formidable");
 const Post = require("../models/post");
 const fs = require("fs");
 
+exports.postById = (req, res, next, id) => {
+   Post.findById(id)
+      .populate("postedBy", "_id name")
+      .exec((err, post) => {
+         if (err) {
+            res.status(400).json({ error: "Post not found" });
+         }
+         req.post = post;
+         next();
+      });
+};
+
 exports.getPosts = (req, res) => {
    const posts = Post.find()
       .populate("postedBy", "_id name")
@@ -49,4 +61,24 @@ exports.postsByUser = (req, res) => {
          }
          res.json(posts);
       });
+};
+//is poster method
+exports.isPoster = (req, res, next) => {
+   console.log("isPoster method run");
+   const poster = req.post && req.auth && req.post.postedBy._id == req.auth._id;
+
+   if (!poster) {
+      return res.status(403).json({ error: "User not authorized" });
+   }
+   next();
+};
+//delete post method
+exports.deletePost = (req, res) => {
+   const post = req.post;
+   post.remove((err, post) => {
+      if (err) {
+         res.status(400).json({ error: err });
+      }
+      res.json({ message: "Post deleted successfully", post });
+   });
 };
